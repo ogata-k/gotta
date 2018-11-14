@@ -141,7 +141,7 @@ fn main() {
         writeln!(std::io::stderr(), "\tgotta dir k1 k2 g t w h\n");
         writeln!(std::io::stderr(), "* all argument without dir is integer of 16bit");
         writeln!(std::io::stderr(), "* dir is target-directory for generateing images. if dir does not exist, this program occured error");
-        writeln!(std::io::stderr(), "* k1, k2, g are parameters for image");
+        writeln!(std::io::stderr(), "* k1, k2, g are parameters for simulation");
         writeln!(std::io::stderr(), "* w is width of image");
         writeln!(std::io::stderr(), "* h is height of image");
         writeln!(std::io::stderr(), "* t is time of simulation");
