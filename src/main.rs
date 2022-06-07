@@ -1,11 +1,11 @@
-extern crate rand;
 extern crate image;
+extern crate rand;
 
 use rand::Rng;
 
 use std::fs::File;
-use std::path::Path;
 use std::io::Write;
+use std::path::Path;
 
 struct Board {
     width: u32,
@@ -20,24 +20,24 @@ struct BoardParameter {
 }
 
 impl Board {
-    fn new(width: u32, height: u32) -> Board{
+    fn new(width: u32, height: u32) -> Board {
         Board {
             width: width,
             height: height,
-            buff: vec![0; (width * height) as usize]
+            buff: vec![0; (width * height) as usize],
         }
     }
 
     /// Board initializer
     fn seed(&mut self) {
         let mut rng = rand::thread_rng();
-        for i in 0 .. self.buff.iter().count() {
+        for i in 0..self.buff.iter().count() {
             self.buff[i] = rng.gen();
         }
     }
 
     /// getter for value of Board at (x, y)
-    fn value(&self, x: u32, y: u32) -> u8{
+    fn value(&self, x: u32, y: u32) -> u8 {
         self.buff[(y * self.width + x) as usize]
     }
 
@@ -54,13 +54,13 @@ impl Board {
     }
 
     /// 画像を保存する関数
-    fn image(&self, filename: &str){
+    fn image(&self, filename: &str) {
         let mut imgbuf = image::ImageBuffer::new(self.width, self.height);
         for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
             *pixel = image::Luma([self.value(x, y)]);
         }
         let ref mut fout = File::create(&Path::new(filename)).unwrap();
-        let _ = image::ImageLuma8(imgbuf).save(fout, image::PNG);
+        let _ = image::DynamicImage::ImageLuma8(imgbuf).write_to(fout, image::ImageOutputFormat::Png);
     }
 
     /// 指定座標の周辺状況を取得する関数
@@ -72,9 +72,14 @@ impl Board {
         let y2: u32 = (y + 1) % self.height; // 下
 
         [
-            self.value(x1, y1), self.value(x, y1), self.value(x2, y1),
-            self.value(x1, y),                     self.value(x2, y),
-            self.value(x1, y2), self.value(x, y2), self.value(x2, y2)
+            self.value(x1, y1),
+            self.value(x, y1),
+            self.value(x2, y1),
+            self.value(x1, y),
+            self.value(x2, y),
+            self.value(x1, y2),
+            self.value(x, y2),
+            self.value(x2, y2),
         ]
     }
 
@@ -99,15 +104,18 @@ impl Board {
         count
     }
 
-    fn sum(&self, x: u32, y: u32) -> u16{
-        self.neighborhood(x, y).iter().fold(0u16, |sum, v| sum + *v as u16) + self.value(x, y) as u16
+    fn sum(&self, x: u32, y: u32) -> u16 {
+        self.neighborhood(x, y)
+            .iter()
+            .fold(0u16, |sum, v| sum + *v as u16)
+            + self.value(x, y) as u16
     }
 
     fn step(&mut self, params: &BoardParameter) {
         let mut next_board = Board::new(self.width, self.height);
         let mut value: u8;
-        for y in 0 .. self.height {
-            for x in 0 .. self.width {
+        for y in 0..self.height {
+            for x in 0..self.width {
                 value = self.value(x, y);
                 if value == 255 {
                     next_board.set_value(x, y, 0);
@@ -135,29 +143,35 @@ impl Board {
 }
 
 fn main() {
-    if std::env::args().len() != 8 { //プログラム名を入れて8
-        writeln!(std::io::stderr(), "Error!:number of the argument for this program is not 7");
+    if std::env::args().len() != 8 {
+        //プログラム名を入れて8
+        writeln!(
+            std::io::stderr(),
+            "Error!:number of the argument for this program is not 7"
+        );
         writeln!(std::io::stderr(), "Useage:");
         writeln!(std::io::stderr(), "\tgotta dir k1 k2 g t w h\n");
-        writeln!(std::io::stderr(), "* all argument without dir is integer of 16bit");
+        writeln!(
+            std::io::stderr(),
+            "* all argument without dir is integer of 16bit"
+        );
         writeln!(std::io::stderr(), "* dir is target-directory for generateing images. if dir does not exist, this program occured error");
-        writeln!(std::io::stderr(), "* k1, k2, g are parameters for simulation");
+        writeln!(
+            std::io::stderr(),
+            "* k1, k2, g are parameters for simulation"
+        );
         writeln!(std::io::stderr(), "* w is width of image");
         writeln!(std::io::stderr(), "* h is height of image");
         writeln!(std::io::stderr(), "* t is time of simulation");
         std::process::exit(1);
     }
-    let args: Vec<String> = std::env::args()
-                            .skip(1)
-                            .collect();
+    let args: Vec<String> = std::env::args().skip(1).collect();
     let dname: &String = &args[0];
-    let uargs: Vec<u16>  =  args
-                            .iter()
-                            .skip(1)
-                            .map( |s|
-                                s.parse::<u16>().unwrap()
-                            )
-                            .collect();
+    let uargs: Vec<u16> = args
+        .iter()
+        .skip(1)
+        .map(|s| s.parse::<u16>().unwrap())
+        .collect();
     let k1: &u16 = &uargs[0];
     let k2: &u16 = &uargs[1];
     let g: &u16 = &uargs[2];
@@ -165,10 +179,14 @@ fn main() {
     let w: &u16 = &uargs[4];
     let h: &u16 = &uargs[5];
     let mut b = Board::new(*w as u32, *h as u32);
-    let params = BoardParameter{k1: *k1 as f32, k2: *k2 as f32, g: *g as u8};
+    let params = BoardParameter {
+        k1: *k1 as f32,
+        k2: *k2 as f32,
+        g: *g as u8,
+    };
     b.seed();
-    for i in 0 .. *t {
-        let s = format!("{}/img-{:04}.png", dname , i);
+    for i in 0..*t {
+        let s = format!("{}/img-{:04}.png", dname, i);
         b.image(&s);
         b.step(&params);
     }

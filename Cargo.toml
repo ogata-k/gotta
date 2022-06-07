@@ -5,4 +5,4 @@ authors = ["ogata-k <ogtkzk712@gmail.com>"]
 
 [dependencies]
 rand = "0.3.0"
-image = "0.10.0"
+image = "0.23.12"
